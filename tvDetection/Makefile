@@ -1,7 +1,7 @@
 
 NAME		=	tvdetection
 
-CV_DIR		=	CV
+CV_DIR		=	../CV
 CV_SRCS		=	$(CV_DIR)/Window.cpp			\
 			$(CV_DIR)/Image.cpp			\
 			$(CV_DIR)/Mat.cpp			\
@@ -14,15 +14,15 @@ CV_SRCS		=	$(CV_DIR)/Window.cpp			\
 			$(CV_DIR)/Test/ContourTestWindow.cpp	\
 			$(CV_DIR)/Test/LineTestWindow.cpp
 
-LIBS		=	-lcv -lhighgui -lcxcore
-INCLUDES	=	-I.
+LIBS		=	`pkg-config --libs opencv`
+INCLUDES	=	-I. -I../
 
 SRCS		=	main.cpp				\
 			$(CV_SRCS)
 
 OBJS		=	$(SRCS:.cpp=.o)
 CXX		=	g++
-CXXFLAGS	=	
+CXXFLAGS	=	`pkg-config --cflags opencv` $(INCLUDES)
 RM		=	rm -rf
 
 
