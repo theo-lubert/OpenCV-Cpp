@@ -33,7 +33,7 @@ void				printContours(CV::Image *image, CV::Image *gray)
   CvConvexityDefect		*d;
 
   cvFindContours(gray->getIplImage(), st, &contour);
-  contour = cvApproxPoly(contour, sizeof(CvContour), st, CV_POLY_APPROX_DP, 5, 1);
+  // contour = cvApproxPoly(contour, sizeof(CvContour), st, CV_POLY_APPROX_DP, 10, 1);
   while (contour)
     {
       convexhull = cvConvexHull2(contour, NULL,
@@ -45,7 +45,7 @@ void				printContours(CV::Image *image, CV::Image *gray)
 				  convexhull,
 				  defectst);
       CvRect rect = cvBoundingRect(contour, 0);
-      if ((defect->total >= 3)
+      if ((defect->total >= 0)
 	  && (rect.width > 100) && (rect.height > 100)
 	  && (rect.width < 400) && (rect.height < 400))
 	{
@@ -62,6 +62,7 @@ void				printContours(CV::Image *image, CV::Image *gray)
 
 	  while (defect)
 	    {
+	      CvPoint lastPoint = cvPoint(-1, -1);
 	      CvConvexityDefect *d = CV_GET_SEQ_ELEM(CvConvexityDefect, defect, 0);
 
 	      d = (CvConvexityDefect *)malloc(sizeof(CvConvexityDefect) * defect->total);
@@ -69,11 +70,16 @@ void				printContours(CV::Image *image, CV::Image *gray)
 
 	      color = CV_RGB(255, 0, 0);
 	      for (int i=0, k=defect->total; i<k; i++) {
-		cvLine(image->getIplImage(), *(d[i].start), *(d[i].end), color);
-		cvCircle(image->getIplImage(), *(d[i].depth_point), 5, color, 1, CV_AA);
-		cvCircle(image->getIplImage(), *(d[i].start), 5, color, -1, CV_AA);
-		if (defect->h_next == NULL) {
-		  cvCircle(image->getIplImage(), *(d[i].end), 5, color, -1, CV_AA);
+		if (d[i].depth > 50) {
+		  cvLine(image->getIplImage(), *(d[i].start), *(d[i].end), color);
+		  cvCircle(image->getIplImage(), *(d[i].depth_point), 5, color, 1, CV_AA);
+		  cvCircle(image->getIplImage(), *(d[i].start), 5, color, -1, CV_AA);
+		  lastPoint = *(d[i].end);
+		} else if (lastPoint.x >= 0) {
+		  cvCircle(image->getIplImage(), lastPoint, 5, color, 3, CV_AA);
+		}
+		if ((lastPoint.x >= 0) || (defect->h_next == NULL)) {
+		  cvCircle(image->getIplImage(), lastPoint, 5, color, 3, CV_AA);
 		}
 	      }
 	      defect = defect->h_next;
