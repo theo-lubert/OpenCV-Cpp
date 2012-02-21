@@ -2,3 +2,4 @@
 *.o
 
 tvDetection/tvdetection
+handDetection/handdetection
