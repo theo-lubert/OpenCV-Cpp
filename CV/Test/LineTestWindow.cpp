@@ -25,9 +25,6 @@ void				LineTestWindow::showImage(Image *img)
 
   if (image)
     delete image;
-  if (storage)
-    cvReleaseMemStorage(&storage);
-  storage = cvCreateMemStorage(0);
   image = new Image(img->getIplImage()->width, img->getIplImage()->height,
 		    8, 1);
   cvCanny(img->getIplImage(), image->getIplImage(), 50, 200, 3);
@@ -52,7 +49,7 @@ void				LineTestWindow::showImage(Image *img)
 
 LineTestWindow::    LineTestWindow(int _method, int _rho, int _theta, int _threshold,
 				   double _param1, double _param2)
-  : Window("LineTestWindow"), image(NULL), storage(NULL), lines(NULL),
+  : Window("LineTestWindow"), image(NULL), storage(), lines(NULL),
     method(_method), rho(_rho), theta(_theta),
     threshold(_threshold), param1(_param1), param2(_param2)
 {

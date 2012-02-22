@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include      <stdio.h>
 #include			<opencv/cv.h>
 #include			<opencv/highgui.h>
 
@@ -13,6 +14,8 @@ namespace			CV {
 
   public:
     IplImage			*getIplImage(void);
+
+    operator  IplImage*();
 
     int				save(const std::string &filename);
     int				save(const char *filename);

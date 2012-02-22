@@ -3,14 +3,15 @@
 
 #include			<opencv/cv.h>
 #include			<opencv/highgui.h>
-#include			"../Window.hpp"
+#include      "../Window.hpp"
+#include      "../MemStorage.hpp"
 
 namespace			CV {
 
   class				LineTestWindow : public Window {
   private:
     Image			*image;
-    CvMemStorage		*storage;
+    MemStorage		storage;
     CvSeq			*lines;
     int				method;
     int				rho;

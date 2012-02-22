@@ -12,9 +12,6 @@ void				ContourTestWindow::showImage(Image *original, Image *img)
 {
   if (image)
     delete image;
-  if (storage)
-    cvReleaseMemStorage(&storage);
-  storage = cvCreateMemStorage(0);
   image = original->copy();
   cvFindContours(img->getIplImage(), storage, &first_contour, header_size, mode, method, offset);
   if (first_contour) {
@@ -38,7 +35,7 @@ void				ContourTestWindow::showImage(Image *original, Image *img)
 }
 
 ContourTestWindow::ContourTestWindow(int _mode, int _method, CvPoint _offset)
-  : Window("ContourTestWindow"), image(NULL), storage(NULL), first_contour(NULL),
+  : Window("ContourTestWindow"), image(NULL), storage(), first_contour(NULL),
     header_size(sizeof(CvContour)), mode(_mode), method(_method), offset(_offset)
 {
 }
@@ -47,6 +44,4 @@ ContourTestWindow::~ContourTestWindow(void)
 {
   if (image)
     delete image;
-  if (storage)
-    cvReleaseMemStorage(&storage);
 }

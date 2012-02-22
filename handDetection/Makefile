@@ -5,6 +5,7 @@ CV_DIR		=	../CV
 CV_SRCS		=	$(CV_DIR)/Window.cpp			\
 			$(CV_DIR)/Image.cpp			\
 			$(CV_DIR)/Mat.cpp			\
+			$(CV_DIR)/MemStorage.cpp			\
 			$(CV_DIR)/Capture.cpp			\
 			$(CV_DIR)/CaptureFile.cpp		\
 			$(CV_DIR)/VideoWriter.cpp		\

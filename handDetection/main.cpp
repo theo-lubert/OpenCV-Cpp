@@ -9,31 +9,22 @@
 #include "CV/Test/ContourTestWindow.hpp"
 #include "CV/Camera.hpp"
 
-int				cvSeqSize(CvSeq *seq){
-  int				count;
-
-  for(count = 0; seq != NULL; seq = seq->h_next) {
-    count++;
-  }
-  return count;
-}
+#define	ABS(n)	(((n) >= 0) ? (n) : -(n))
 
 void				printContours(CV::Image *image, CV::Image *gray)
 {
-  CvMemStorage			*storage = cvCreateMemStorage(0);
-  CvMemStorage			*st = cvCreateMemStorage(0);
-  CvMemStorage			*defectst = cvCreateMemStorage(0);
+  CV::MemStorage			st;
+  CV::MemStorage			defectst;
   CvSeq				*contour;
 
   int				*hull;
-  int				hullsize;
   CvSeq				*defect;
   CvSeq				*convexhull;
   CvPoint			*points;
   CvConvexityDefect		*d;
 
-  cvFindContours(gray->getIplImage(), st, &contour);
-  // contour = cvApproxPoly(contour, sizeof(CvContour), st, CV_POLY_APPROX_DP, 10, 1);
+  cvFindContours(*gray, st, &contour);
+  // contour = cvApproxPoly(contour, sizeof(CvContour), st, CV_POLY_APPROX_DP, 30, 1);
   while (contour)
     {
       convexhull = cvConvexHull2(contour, NULL,
@@ -49,12 +40,12 @@ void				printContours(CV::Image *image, CV::Image *gray)
 	  && (rect.width > 100) && (rect.height > 100)
 	  && (rect.width < 400) && (rect.height < 400))
 	{
-	  cvRectangle(image->getIplImage(),
+	  cvRectangle(*image,
 		      cvPoint(rect.x, rect.y),
 		      cvPoint((rect.x + rect.width),
 			      (rect.y + rect.height)),
 		      color);
-	  cvDrawContours(image->getIplImage(),
+	  cvDrawContours(*image,
 			 contour,
 			 color,
 			 cvScalarAll(155),
@@ -70,16 +61,20 @@ void				printContours(CV::Image *image, CV::Image *gray)
 
 	      color = CV_RGB(255, 0, 0);
 	      for (int i=0, k=defect->total; i<k; i++) {
-		if (d[i].depth > 50) {
-		  cvLine(image->getIplImage(), *(d[i].start), *(d[i].end), color);
-		  cvCircle(image->getIplImage(), *(d[i].depth_point), 5, color, 1, CV_AA);
-		  cvCircle(image->getIplImage(), *(d[i].start), 5, color, -1, CV_AA);
+		if (d[i].depth > 10) {
+		  cvLine(*image, *(d[i].start), *(d[i].end), color);
+		  cvCircle(*image, *(d[i].depth_point), 5, color, 1, CV_AA);
+		  if ((lastPoint.x >= 0)
+		  	&& (ABS(pow(((d[i].start->x - lastPoint.x)), 2) + pow((d[i].start->y - lastPoint.y), 2)) < 20)) {
+		  	CvPoint p = cvPoint(((d[i].start->x + lastPoint.x) / 2.0), ((d[i].start->y + lastPoint.y) / 2.0));
+		  	cvCircle(*image, p, 10, color, -1, CV_AA);
+		  } else {
+			cvCircle(*image, *(d[i].start), 10, color, -1, CV_AA);
+		  }
 		  lastPoint = *(d[i].end);
-		} else if (lastPoint.x >= 0) {
-		  cvCircle(image->getIplImage(), lastPoint, 5, color, 3, CV_AA);
 		}
 		if ((lastPoint.x >= 0) || (defect->h_next == NULL)) {
-		  cvCircle(image->getIplImage(), lastPoint, 5, color, 3, CV_AA);
+		  cvCircle(*image, lastPoint, 10, color, -1, CV_AA);
 		}
 	      }
 	      defect = defect->h_next;
@@ -88,8 +83,6 @@ void				printContours(CV::Image *image, CV::Image *gray)
 
       contour = contour->h_next;
     }
-  cvReleaseMemStorage(&st);
-  cvReleaseMemStorage(&defectst);
 }
 
 int				main(int ac, char **av)
@@ -100,10 +93,9 @@ int				main(int ac, char **av)
 
   cvInitSystem(ac, av);
 
-  // CV::ThresholdTestWindow	twin(80, 255, CV_THRESH_BINARY);
-  // CV::ContourTestWindow		cwin(CV_RETR_TREE, CV_CHAIN_APPROX_TC89_KCOS);
+ CV::ThresholdTestWindow	twin(80, 255, CV_THRESH_BINARY);
   CV::Window			win("Hand detection");
-  CV::Camera			cam(camIdx);
+  CV::Camera			cam(camIdx, 0);
   CV::Image			*frame;
   char				key = 0;
 
@@ -113,12 +105,12 @@ int				main(int ac, char **av)
 	{
 	  CV::Image			*gray = frame->convertColor(CV_BGR2GRAY, 8, 1);
 
-	  cvSmooth(gray->getIplImage(), gray->getIplImage());
-	  // win.showImage(gray);
-	  // cwin.showImage(frame, win.getImage());
-	  cvThreshold(gray->getIplImage(), gray->getIplImage(),
-		      80.0, 255.0, CV_THRESH_BINARY);
-	  printContours(frame, gray);
+	  cvSmooth(*gray, *gray);
+	  twin.showImage(gray);
+	  // cvThreshold(gray->getIplImage(), gray->getIplImage(),
+		      // 80.0, 255.0, CV_THRESH_BINARY);
+	  // printContours(frame, gray);
+	  printContours(frame, twin.getImage());
 	  win.showImage(frame);
 	  delete gray;
 	  delete frame;

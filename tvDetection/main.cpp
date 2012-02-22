@@ -208,7 +208,7 @@ int				main(int ac, char **av)
 				     5,
 				     5);
   CV::ContourTestWindow		cwin(CV_RETR_TREE, CV_CHAIN_APPROX_TC89_KCOS);
-  CV::Camera			cam(1);
+  CV::Camera			cam(0, 0);
 
   CV::Image			*frame;
   char				key = 0;

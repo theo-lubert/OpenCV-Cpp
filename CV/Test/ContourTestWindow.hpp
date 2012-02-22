@@ -3,14 +3,15 @@
 
 #include			<opencv/cv.h>
 #include			<opencv/highgui.h>
-#include			"../Window.hpp"
+#include      "../Window.hpp"
+#include      "../MemStorage.hpp"
 
 namespace			CV {
 
   class				ContourTestWindow : public Window {
   private:
     Image			*image;
-    CvMemStorage		*storage;
+    MemStorage		storage;
     CvSeq			*first_contour;
     int				header_size;
     int				mode;

@@ -8,6 +8,11 @@ IplImage			*Image::getIplImage(void)
   return (image);
 }
 
+Image::operator IplImage*()
+{
+  return (getIplImage());
+}
+
 int				Image::save(const std::string &filename)
 {
   return (cvSaveImage(filename.c_str(), image));
