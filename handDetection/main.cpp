@@ -8,81 +8,32 @@
 #include "CV/Test/LineTestWindow.hpp"
 #include "CV/Test/ContourTestWindow.hpp"
 #include "CV/Camera.hpp"
+#include "CV/HandDetector.hpp"
 
 #define	ABS(n)	(((n) >= 0) ? (n) : -(n))
 
-void				printContours(CV::Image *image, CV::Image *gray)
+
+double x = -1;
+double y = -1;
+
+bool				isContourMatchFocusPoint(CvSeq *contour, CvPoint point)
 {
-  CV::MemStorage			st;
-  CV::MemStorage			defectst;
-  CvSeq				*contour;
-
-  int				*hull;
-  CvSeq				*defect;
-  CvSeq				*convexhull;
-  CvPoint			*points;
-  CvConvexityDefect		*d;
-
-  cvFindContours(*gray, st, &contour);
-  // contour = cvApproxPoly(contour, sizeof(CvContour), st, CV_POLY_APPROX_DP, 30, 1);
-  while (contour)
-    {
-      convexhull = cvConvexHull2(contour, NULL,
-				 CV_COUNTER_CLOCKWISE,
-				 0);
-
-      CvScalar color = cvScalarAll(255);
-      defect = cvConvexityDefects(contour,
-				  convexhull,
-				  defectst);
-      CvRect rect = cvBoundingRect(contour, 0);
-      if ((defect->total >= 0)
-	  && (rect.width > 100) && (rect.height > 100)
-	  && (rect.width < 400) && (rect.height < 400))
+	if (contour)
 	{
-	  cvRectangle(*image,
-		      cvPoint(rect.x, rect.y),
-		      cvPoint((rect.x + rect.width),
-			      (rect.y + rect.height)),
-		      color);
-	  cvDrawContours(*image,
-			 contour,
-			 color,
-			 cvScalarAll(155),
-			 -1, 1, 8);
-
-	  while (defect)
-	    {
-	      CvPoint lastPoint = cvPoint(-1, -1);
-	      CvConvexityDefect *d = CV_GET_SEQ_ELEM(CvConvexityDefect, defect, 0);
-
-	      d = (CvConvexityDefect *)malloc(sizeof(CvConvexityDefect) * defect->total);
-	      cvCvtSeqToArray(defect, d, CV_WHOLE_SEQ);
-
-	      color = CV_RGB(255, 0, 0);
-	      for (int i=0, k=defect->total; i<k; i++) {
-		if (d[i].depth > 10) {
-		  cvLine(*image, *(d[i].start), *(d[i].end), color);
-		  cvCircle(*image, *(d[i].depth_point), 5, color, 1, CV_AA);
-		  if ((lastPoint.x >= 0)
-		  	&& (ABS(pow(((d[i].start->x - lastPoint.x)), 2) + pow((d[i].start->y - lastPoint.y), 2)) < 20)) {
-		  	CvPoint p = cvPoint(((d[i].start->x + lastPoint.x) / 2.0), ((d[i].start->y + lastPoint.y) / 2.0));
-		  	cvCircle(*image, p, 10, color, -1, CV_AA);
-		  } else {
-			cvCircle(*image, *(d[i].start), 10, color, -1, CV_AA);
-		  }
-		  lastPoint = *(d[i].end);
-		}
-		if ((lastPoint.x >= 0) || (defect->h_next == NULL)) {
-		  cvCircle(*image, lastPoint, 10, color, -1, CV_AA);
-		}
-	      }
-	      defect = defect->h_next;
-	    }
+	    CvRect rect = cvBoundingRect(contour, 0);
+		return ((rect.x <= point.x) && (rect.y <= point.y)
+			&& (rect.x + rect.width >= point.x) && (rect.y + rect.height >= point.y));
 	}
+	return (false);
+}
 
-      contour = contour->h_next;
-    }
+void			callback(int event, int _x, int _y, int flags, void*)
+{
+	if (event == CV_EVENT_LBUTTONUP)
+	{
+		x = _x;
+		y = _y;
+	}
 }
 
 int				main(int ac, char **av)
@@ -99,6 +50,7 @@ int				main(int ac, char **av)
   CV::Image			*frame;
   char				key = 0;
 
+  cvSetMouseCallback("Hand detection", &callback);
   while (key != 27) // ESC
     {
       if ((frame = cam.queryFrame()) != NULL)
@@ -110,7 +62,40 @@ int				main(int ac, char **av)
 	  // cvThreshold(gray->getIplImage(), gray->getIplImage(),
 		      // 80.0, 255.0, CV_THRESH_BINARY);
 	  // printContours(frame, gray);
-	  printContours(frame, twin.getImage());
+
+	  // printContours(frame, twin.getImage());
+	  if (x >= 0)
+	  {
+		  cvCircle(*frame, cvPoint(x, y), 10, cvScalarAll(255), 2, CV_AA);
+		  cvCircle(*frame, cvPoint(x, y), 10, CV_RGB(255, 0, 0), 1, CV_AA);
+		}
+
+	  CV::HandDetector detector(twin.getImage());
+
+  	  CV::Hand	*focusedHand = NULL;
+	  for (int i=0, k=detector.getHands().size(); i<k; i++)
+	  {
+	  	CV::Hand	*hand = detector.getHands()[i];
+      	bool focused = isContourMatchFocusPoint(hand->getContour(), cvPoint(x, y));
+      	if (focused)
+      	{
+      		if (focusedHand)
+      		{
+      			CvRect	saveRect = cvBoundingRect(focusedHand->getContour(), 0);
+	      		CvRect	rect = cvBoundingRect(hand->getContour(), 0);
+
+	      		if (((rect.width * rect.height) < (saveRect.width * saveRect.height)))
+		      		focusedHand = hand;
+	     	} else {
+	     		focusedHand = hand;
+	     	}
+      	} else {
+	  		hand->drawToImage(frame);
+		}
+	  }
+	  if (focusedHand)
+	  	focusedHand->drawToImage(frame, true);
+
 	  win.showImage(frame);
 	  delete gray;
 	  delete frame;

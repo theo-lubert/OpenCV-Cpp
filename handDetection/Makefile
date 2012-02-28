@@ -10,11 +10,13 @@ CV_SRCS		=	$(CV_DIR)/Window.cpp			\
 			$(CV_DIR)/CaptureFile.cpp		\
 			$(CV_DIR)/VideoWriter.cpp		\
 			$(CV_DIR)/Camera.cpp			\
+			$(CV_DIR)/HandDetector.cpp		\
+			$(CV_DIR)/Hand.cpp				\
 			$(CV_DIR)/Test/AdaptiveThresholdTestWindow.cpp	\
 			$(CV_DIR)/Test/ThresholdTestWindow.cpp	\
 			$(CV_DIR)/Test/ContourTestWindow.cpp	\
 			$(CV_DIR)/Test/LineTestWindow.cpp
-
+			
 LIBS		=	`pkg-config --libs opencv`
 INCLUDES	=	-I. -I../
 
